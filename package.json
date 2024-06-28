@@ -1,0 +1,32 @@
+{
+  "name": "node-video-peer",
+  "version": "1.0.0",
+  "description": "THIS IS POC FOR GETTING THE LOCAL VIDEO FROM NODE SERVER BUT THAT RENDER ON PEER. WHEN PEER ARE CALL ON NODE SERVER THAT RETURNS THE STREAM IN PEER.",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/himanshuchauhan59/node-video-peer.git"
+  },
+  "keywords": [
+    "nodejs",
+    "peer",
+    "streamVideo"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/himanshuchauhan59/node-video-peer/issues"
+  },
+  "homepage": "https://github.com/himanshuchauhan59/node-video-peer#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "fs": "^0.0.1-security",
+    "nodemon": "^3.1.4"
+  }
+}
