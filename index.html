@@ -182,17 +182,12 @@
                     const blob = new Blob(chunks, { type: 'video/mp4' });
                     const url = URL.createObjectURL(blob);
                     resolve(url);
-                    // const video = document.getElementById('videoElement');
-                    // video.src = url;
-                    // video.load();
                 } catch (err) {
                     reject(err);
                     console.error('Error loading video:', err);
                 }
             })
         }
-
-        // initVideoPlayer();
     </script>
 </body>
 

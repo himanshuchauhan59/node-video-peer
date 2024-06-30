@@ -4,7 +4,7 @@ const fs = require('fs');
 app.use(router);
 
 app.listen(7544, () => {
-    console.log('Server is running on port 7543');
+    console.log('Server is running on port 7544');
 });
 
 app.get("/", (req, res) => {
