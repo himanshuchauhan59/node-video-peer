@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peer Video Testing</title>
+</head>
+
+<body>
+    <p>Client is connected with ID: <span id="peerIdConnected"></span></p>
+    <input type="text" id="peerId" placeholder="Enter peer ID to connect">
+    <button onclick="connectPeers()">Connect</button>
+    <button onclick="getData()">Send Data</button>
+    <video id="videoElement" controls style="width: 400px;height: 400px;"></video>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script>
+        const customGenerationFunction = () => (Math.random().toString(36) + "0000000000000000000").substr(2, 16);
+        const peer = new Peer(customGenerationFunction(), {
+            host: 'localhost',
+            port: 1711,
+            path: '/connectPeer'
+        });
+
+        let connection;
+        let mediaSource;
+        let sourceBuffer;
+        let chunksArray = [];
+
+        peer.on('open', function (peerId) {
+            document.getElementById('peerIdConnected').innerText = peerId;
+            console.log('My peer ID is:', peerId);
+        });
+
+        peer.on('connection', function (conn) {
+            connection = conn;
+            console.log('Incoming connection from:', conn.peer);
+            setMessageListener(connection);
+        });
+
+        const connectPeers = () => {
+            const peerId = document.getElementById('peerId').value;
+            if (!peerId) {
+                alert('Please enter a peer ID');
+                return;
+            }
+
+            connection = peer.connect(peerId);
+            connection.on('open', function () {
+                console.log('Connected to peer:', peerId);
+                setMessageListener(connection);
+            });
+        };
+
+        const getData = () => {
+            if (connection && connection.open) {
+                console.log('Requesting data from peer');
+                connection.send({ type: "getData" });
+            } else {
+                console.log('No open connection to request data');
+            }
+        };
+
+        const setMessageListener = (conn) => {
+            conn.on('data', function (data) {
+                console.log('Received data:', data);
+                if (data.type === 'getData') {
+                    apiCallMedia().then((res) => {
+                        res.forEach(chunk => {
+                            connection.send({ type: "stream", value: chunk, isEnd: false });
+                        });
+                        connection.send({ type: "stream", isEnd: true });
+                    }).catch((err) => {
+                        console.log(err)
+                    })
+                }
+
+                if (data.type == "stream") {
+                    console.log("stream received", data);
+                    if (data.isEnd) {
+                        let videoElement = document.getElementById("videoElement");
+                        const blob = new Blob(chunksArray, { type: 'video/mp4' });
+                        const url = URL.createObjectURL(blob);
+                        videoElement.src = url;
+                        videoElement.load();
+                    } else if (!data.isEnd) {
+                        chunksArray.push(data.value)
+                    }
+                }
+            });
+
+            conn.on('close', function () {
+                console.log('Connection closed');
+            });
+        };
+
+        const appendBufferToSourceBuffer = (data) => {
+            initVideoPlayer().then((res) => {
+                console.log("video response", res)
+                if (!res[0] || res[0].readyState !== 'open') {
+                    console.error('MediaSource is not open');
+                    return;
+                }
+                if (!res[1]) {
+                    console.error('res[1] is not initialized');
+                    return;
+                }
+                if (res[1].updating) {
+                    console.log("updating")
+                    res[1].addEventListener('updateend', function bufferUpdate() {
+                        res[1].removeEventListener('updateend', bufferUpdate);
+                        res[1].appendBuffer(data);
+                        console.log("updating", res[1])
+                    });
+                } else {
+                    res[1].appendBuffer(data);
+                    console.log("appending", res[1])
+                }
+            });
+        };
+
+        const initVideoPlayer = () => {
+            return new Promise((resolve, reject) => {
+                const video = document.getElementById('videoElement');
+                mediaSource = new MediaSource();
+                video.src = URL.createObjectURL(mediaSource);
+
+                mediaSource.addEventListener('sourceopen', function () {
+                    try {
+                        sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+                        console.log('SourceBuffer initialized');
+                        resolve([mediaSource, sourceBuffer]);
+                    } catch (e) {
+                        console.error('Exception while adding SourceBuffer:', e);
+                    }
+                });
+
+                mediaSource.addEventListener('sourceclose', function () {
+                    console.log('MediaSource closed');
+                });
+
+                mediaSource.addEventListener('error', function (e) {
+                    console.error('MediaSource error:', e);
+                });
+            })
+        };
+
+        function apiCallMedia() {
+            return new Promise((resolve, reject) => {
+                fetch("http://localhost:7544/getVideo", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }).then(response => response.body)
+                    .then((body) => {
+                        const reader = body.getReader();
+                        const streamChunks = async () => {
+                            let done, value;
+                            let dataStorage = [];
+                            while ({ done, value } = await reader.read(), !done) {
+                                dataStorage.push(value)
+                            }
+                            return dataStorage;
+                        };
+                        streamChunks().then((stream) => {
+                            resolve(stream);
+                        });
+                    })
+                    .catch(err => {
+                        reject(err);
+                        console.error('Fetch error:', err)
+                    });
+            })
+        }
+
+        async function loadVideo(data) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const chunks = data;
+                    const blob = new Blob(chunks, { type: 'video/mp4' });
+                    const url = URL.createObjectURL(blob);
+                    resolve(url);
+                    // const video = document.getElementById('videoElement');
+                    // video.src = url;
+                    // video.load();
+                } catch (err) {
+                    reject(err);
+                    console.error('Error loading video:', err);
+                }
+            })
+        }
+
+        // initVideoPlayer();
+    </script>
+</body>
+
+</html>

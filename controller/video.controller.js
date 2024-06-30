@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const videoService = (req, res) => {
-    let path = '/assets/demoVideo.mp4'; // path of video file.
+    let path = 'D:\\Projects\\NODE-VIDEO-PEER\\assets\\demoVideo.mp4'; // path of video file.
     let videoStat = fs.statSync(path);
     let fileSize = videoStat.size;
     let range = req.headers.range;
@@ -19,6 +19,7 @@ const videoService = (req, res) => {
             'Content-Length': chunksize,
             'Content-Type': 'video/mp4',
         };
+        console.log(file, head)
         res.writeHead(206, head);
         file.pipe(res);
     } else {
@@ -27,6 +28,7 @@ const videoService = (req, res) => {
             'Content-Type': 'video/mp4',
         };
         res.writeHead(200, head);
+        console.log(head)
         fs.createReadStream(path).pipe(res);
     }
 }
