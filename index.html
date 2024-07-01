@@ -11,17 +11,27 @@
     <p>Client is connected with ID: <span id="peerIdConnected"></span></p>
     <input type="text" id="peerId" placeholder="Enter peer ID to connect">
     <button onclick="connectPeers()">Connect</button>
-    <button onclick="getData()">Send Data</button>
+    <button onclick="getData()">GET DATA FROM PEER</button>
     <video id="videoElement" controls style="width: 400px;height: 400px;"></video>
 
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script>
+
+        // NOTE : AFTER SUCCESSFULLY CONNECTION ESTABLISH, YOU RECEIVED THE CONNECTION ID IN THE CONSOLE.
+        // THAT CONNECTION ID TO BE USED TO CONNECT WITH ANOTHER PEER.
+
         const customGenerationFunction = () => (Math.random().toString(36) + "0000000000000000000").substr(2, 16);
-        const peer = new Peer(customGenerationFunction(), {
-            host: 'localhost',
-            port: 1711,
-            path: '/connectPeer'
-        });
+
+        // THIS FOR SETUP THE LOCAL SERVER IN YOUR SYSTEM IF CONNECTION IS IN LOCAL SYSTEM THEN USE THIS BELOW CODE.
+
+        // const peer = new Peer(customGenerationFunction(), {
+        //     host: 'localhost',
+        //     port: 1711,
+        //     path: '/connectPeer'
+        // });
+
+        // IF YOU NEED TO CREATE CONNECTION IN GLOBAL CLOUD THEN USE THIS BELOW CODE.
+        var peer = new Peer();
 
         let connection;
         let mediaSource;
@@ -95,30 +105,31 @@
             });
         };
 
-        const appendBufferToSourceBuffer = (data) => {
-            initVideoPlayer().then((res) => {
-                console.log("video response", res)
-                if (!res[0] || res[0].readyState !== 'open') {
-                    console.error('MediaSource is not open');
-                    return;
-                }
-                if (!res[1]) {
-                    console.error('res[1] is not initialized');
-                    return;
-                }
-                if (res[1].updating) {
-                    console.log("updating")
-                    res[1].addEventListener('updateend', function bufferUpdate() {
-                        res[1].removeEventListener('updateend', bufferUpdate);
-                        res[1].appendBuffer(data);
-                        console.log("updating", res[1])
-                    });
-                } else {
-                    res[1].appendBuffer(data);
-                    console.log("appending", res[1])
-                }
-            });
-        };
+        // COMMENTED CODE BECAUSE IT IS NOT APPENDING CHUNKS IN VIDEO SOURCE BUFFER.
+        // const appendBufferToSourceBuffer = (data) => {
+        //     initVideoPlayer().then((res) => {
+        //         console.log("video response", res)
+        //         if (!res[0] || res[0].readyState !== 'open') {
+        //             console.error('MediaSource is not open');
+        //             return;
+        //         }
+        //         if (!res[1]) {
+        //             console.error('res[1] is not initialized');
+        //             return;
+        //         }
+        //         if (res[1].updating) {
+        //             console.log("updating")
+        //             res[1].addEventListener('updateend', function bufferUpdate() {
+        //                 res[1].removeEventListener('updateend', bufferUpdate);
+        //                 res[1].appendBuffer(data);
+        //                 console.log("updating", res[1])
+        //             });
+        //         } else {
+        //             res[1].appendBuffer(data);
+        //             console.log("appending", res[1])
+        //         }
+        //     });
+        // };
 
         const initVideoPlayer = () => {
             return new Promise((resolve, reject) => {

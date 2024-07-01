@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const videoService = (req, res) => {
-    let path = 'D:\\Projects\\NODE-VIDEO-PEER\\assets\\demoVideo.mp4'; // path of video file.
+    let path = 'D:\\PROJECTS\\NODE-STREAM-PEER\\assets\\demoVideo.mp4'; // path of video file.
     let videoStat = fs.statSync(path);
     let fileSize = videoStat.size;
     let range = req.headers.range;
