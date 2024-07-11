@@ -3,7 +3,7 @@ const router = require('./routes/video.routes');
 const fs = require('fs');
 app.use(router);
 
-app.listen(7544, () => {
+app.listen(port, () => {
     console.log('Server is running on port 7544');
 });
 
